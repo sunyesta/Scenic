@@ -12,6 +12,7 @@ import trimesh
 from scenic.core.distributions import Samplable, needsSampling
 from scenic.core.errors import InvalidScenarioError
 from scenic.core.lazy_eval import needsLazyEvaluation
+from scenic.core.object_types import CollisionMode
 from scenic.core.propositions import Atomic, PropositionNode
 import scenic.syntax.relations as relations
 
@@ -296,7 +297,20 @@ class IntersectionRequirement(SamplingRequirement):
     def falsifiedByInner(self, sample):
         objA = sample[self.objA]
         objB = sample[self.objB]
-        if objA.allowCollisions or objB.allowCollisions:
+
+        # all cases where the objs are allowed to collide
+        if (
+            (
+                objA.collisionMode == CollisionMode.COLLIDABLE
+                and objB.collisionMode == CollisionMode.NO_COLLISION
+            )
+            or (
+                objA.collisionMode == CollisionMode.NO_COLLISION
+                and objB.collisionMode == CollisionMode.COLLIDABLE
+            )
+            or objA.collisionMode == CollisionMode.COLLIDABLE_WITH_ALL
+            or objB.collisionMode == CollisionMode.COLLIDABLE_WITH_ALL
+        ):
             return False
         return objA.intersects(objB)
 
